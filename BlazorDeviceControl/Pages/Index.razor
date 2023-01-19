@@ -19,10 +19,10 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        this.DpsDevice.PropertyChanged += this.dpsChanged;
+        this.DpsDevice.PropertiesUpdated += this.dpsChanged;
     }
 
-    public void dpsChanged(object? s, object e)
+    public void dpsChanged()
     {
         this.InvokeAsync(() => StateHasChanged());
     }
@@ -39,6 +39,6 @@ else
 
     public void Dispose()
     {
-        this.DpsDevice.PropertyChanged -= this.dpsChanged;
+        this.DpsDevice.PropertiesUpdated -= this.dpsChanged;
     }
 }

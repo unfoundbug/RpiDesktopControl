@@ -3,13 +3,13 @@ using System.ComponentModel;
 using System.IO.Ports;
 namespace BlazorDeviceControl.SystemServices
 {
-    public class DPSService : ISystemService, INotifyPropertyChanged
+    public class DPSService : ISystemService
     {
         DPS5005Device? controlledDevice;
         CancellationTokenSource? cts;
         Task? deviceTask;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? PropertiesUpdated;
 
         public DPSService()
         {
@@ -21,7 +21,7 @@ namespace BlazorDeviceControl.SystemServices
         public void Start()
         {
             this.Running = true;
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Running)));
+            this.PropertiesUpdated?.Invoke();
             return;
             this.cts = new CancellationTokenSource();
             string? targetDev = Environment.GetEnvironmentVariable("BLAZOR_SERIAL_DPS");
@@ -44,14 +44,14 @@ namespace BlazorDeviceControl.SystemServices
                 });
 
                 this.Running = true;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Running)));
+            this.PropertiesUpdated?.Invoke();
             }
         }
 
         public void Stop()
         {
             this.Running = false;
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Running)));
+            this.PropertiesUpdated?.Invoke();
             return;
 
             if (this.Running)
@@ -60,7 +60,7 @@ namespace BlazorDeviceControl.SystemServices
                 this.cts = null;
                 this.deviceTask?.Wait();
                 this.Running = false;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Running)));
+            this.PropertiesUpdated?.Invoke();
             }
         }
 
@@ -71,7 +71,7 @@ namespace BlazorDeviceControl.SystemServices
             {
 
                 this.controlledDevice = value;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(this.Device)));
+                this.PropertiesUpdated?.Invoke();
             }
         }
     }
