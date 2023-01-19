@@ -1,0 +1,39 @@
+﻿@inject FZ35Service FzDevice
+
+<h4>DPSDetails</h4>
+<table>
+    <tr>
+        <td>Value</td>
+        <td>Latest state</td>
+    </tr>
+    <tr>
+        <td>Load Voltage</td>
+        <td>@(FzDevice.Device?.LoadVoltage)V</td>
+    </tr>
+    <tr>
+        <td>Load Current</td>
+        <td>@(FzDevice.Device?.LoadCurrent)A</td>
+    </tr>
+        <tr>
+        <td>Target Current</td>
+        <td>@(FzDevice.Device?.TargetCurrent)A</td>
+    </tr>
+</table>
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.FzDevice.PropertiesUpdated += UpdateView;
+    }
+
+    public void OnDispose()
+    {
+        this.FzDevice.PropertiesUpdated -= UpdateView;
+    }
+
+    private void UpdateView()
+    {
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+}
+

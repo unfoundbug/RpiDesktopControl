@@ -1,0 +1,56 @@
+﻿@inject DPSService DpsDevice
+
+<h4>DPSDetails</h4>
+<table>
+    <tr>
+        <td>Value</td>
+        <td>Latest state</td>
+    </tr>
+    <tr>
+        <td>Voltage Input</td>
+        <td>@(DpsDevice.Device?.Input_Voltage)V</td>
+    </tr>
+    <tr>
+        <td>Target Voltage Output</td>
+        <td>@(DpsDevice.Device?.VoltageSetting)V</td>
+    </tr>
+    <tr>
+        <td>Actual Current Output</td>
+        @if (DpsDevice.Device?.Output_State ?? false)
+        {
+            <td>Enabled</td>
+        } else {
+            <td>Disabled</td>
+        }
+    </tr>
+    <tr>
+        <td>Target Current Output</td>
+        <td>@(DpsDevice.Device?.CurrentSetting)A</td>
+    </tr>
+    <tr>
+        <td>Actual Voltage Output</td>
+        <td>@(DpsDevice.Device?.Output_Voltage)V</td>
+    </tr>
+    <tr>
+        <td>Actual Current Output</td>
+        <td>@(DpsDevice.Device?.Output_Current)A</td>
+    </tr>
+</table>
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.DpsDevice.PropertiesUpdated += UpdateView;
+    }
+
+    public void OnDispose()
+    {
+        this.DpsDevice.PropertiesUpdated -= UpdateView;
+    }
+
+    private void UpdateView()
+    {
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+}
+

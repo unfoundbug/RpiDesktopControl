@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -7,9 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="NModbus" Version="3.0.72" />
     <PackageReference Include="NModbus.Serial" Version="3.0.72" />
+    <PackageReference Include="stateless-4.0" Version="2.3.1.1" />
     <PackageReference Include="System.IO.Ports" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
 
 </Project>
