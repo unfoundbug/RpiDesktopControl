@@ -18,7 +18,6 @@ namespace DeviceManager
         private StateMachine<States, Transition> stateMachine;
 
         private SerialPort commsPort;
-        private bool wasDisconnected;
         
         private bool outputEnabled;
         private float targetCurrent;
@@ -29,6 +28,10 @@ namespace DeviceManager
         private float oah;
         private TimeSpan ohp;
 
+        private float loadVoltage = 0;
+        private float loadCurrent = 0;
+        private float capacityDrained = 0;
+        private TimeSpan activeTimer = TimeSpan.MinValue;
 
         public LoadDevice(SerialPort commsPort)
         {
@@ -40,9 +43,10 @@ namespace DeviceManager
 
             this.stateMachine = new StateMachine<States, Transition>(States.Startup);
             this.stateMachine.Configure(States.Startup)
-                .OnEntry(() => this.stateMachine.Fire(Transition.Created));
+                .Permit(Transition.Start, States.Idle);
 
             this.stateMachine.Configure(States.Idle)
+                .Permit(Transition.Connected, States.Connected)
                 .OnEntry(async () =>
                 {
                     log.InfoDetail("Starting Load handling");
@@ -53,30 +57,67 @@ namespace DeviceManager
                             this.commsPort.Open();
                             log.InfoDetail("Load Port open");
                             this.stateMachine.Fire(Transition.Connected);
+                            break;
                         } catch (Exception ex) 
                         { 
-                            await Task.Delay(1000);
+                            this.log.Error("Unable to open serial port", ex);
+                            await Task.Delay(TimeSpan.FromSeconds(10));
                         }
                     }
                 });
 
             this.stateMachine.Configure(States.Connected)
+                .Permit(Transition.Disconnect, States.Idle)
                 .OnEntry(async () => {
                     // Read initial state
+                    log.InfoDetail("Try Stop");
                     this.ActionStop();
+                    log.InfoDetail("Read Params");
                     this.ActionRead();
+                    log.InfoDetail("Disable Output drive");
                     this.ActionDisable();
+                    log.InfoDetail("Start Monitoring");
                     this.ActionStart();
                     log.InfoDetail("Device running");
 
-
-
-                })
-                .OnExit(() => this.wasDisconnected = true);
-
+                    while (true)
+                    {
+                        try
+                        {
+                            var dataLine = this.commsPort.ReadLine();
+                            var vals = dataLine.Split(',');
+                            log.InfoDetail($"Line read, {vals.Length}: {dataLine}");
+                            if (vals.Length == 4)
+                            {
+                                this.loadVoltage = float.Parse(vals[0]);
+                                this.loadCurrent = float.Parse(vals[1]);
+                                this.capacityDrained = float.Parse(vals[2]);
+                                var tsComp = vals[3].Split(':');
+                                this.activeTimer = new TimeSpan(int.Parse(tsComp[0]), int.Parse(tsComp[1]), 0);
+                                this.PropertiesUpdated?.Invoke();
+                            }
+                        }
+                        catch(Exception)
+                        {
+                            this.stateMachine.Fire(Transition.Disconnect);
+                            break;
+                        }
+                    }
+                });
+            this.stateMachine.Fire(Transition.Start);
+            log.InfoDetail("Device State machine fired");
         }
 
         public event Action PropertiesUpdated;
+
+        public float LoadVoltage => this.loadVoltage;
+
+        public float LoadCurrent => this.loadCurrent;
+
+        public float CapacityDrained => this.capacityDrained;
+
+        public TimeSpan ActiveTimer => this.activeTimer;
+
 
         public bool IsEnabled
         {
@@ -252,7 +293,7 @@ namespace DeviceManager
         {
             this.ohp = timeout;
             this.PropertiesUpdated?.Invoke();
-            this.DoCmd($"OHP:{timeout.Minutes}:{timeout.Seconds}");
+            this.DoCmd($"OHP:{timeout.Hours}:{timeout.Minutes}");
         }
 
         private void ActionStart()
@@ -271,7 +312,7 @@ namespace DeviceManager
 
         private void DoCmd(string cmd)
         {
-
+            this.commsPort.WriteLine(cmd);
         }
 
         private bool Open()
@@ -314,8 +355,6 @@ namespace DeviceManager
 
         private enum Transition
         {
-            Created,
-
             Start,
 
             Connected,

@@ -11,6 +11,8 @@ builder.Logging.AddLog4Net("log4net.config");
 var log = LogManager.GetLogger("Startup");
 
 builder.Services.AddSingleton<DPSService, DPSService>();
+builder.Services.AddSingleton<FZ35Service, FZ35Service>();
+
 log.InfoDetail("DPS Service constructed");
 
 log.InfoDetail("Services constructed");
@@ -30,14 +32,13 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-var dpsService = (DPSService)app.Services.GetService(typeof(DPSService));
-if (dpsService != null)
-{
-    dpsService.Start();
-    dpsService.Device.Enable_Output = false;
-}
-
 log.InfoDetail("App about to run");
+
+var dps = (DPSService)app.Services.GetService(typeof(DPSService));
+dps?.Start();
+
+var fz = (FZ35Service)app.Services.GetService(typeof(FZ35Service));
+fz?.Start();
 
 app.Run();
 

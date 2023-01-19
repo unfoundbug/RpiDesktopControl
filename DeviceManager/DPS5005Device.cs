@@ -10,6 +10,7 @@ using NModbus.IO;
 using System.ComponentModel;
 using log4net;
 using ServiceExtensions;
+using Stateless;
 
 namespace DeviceManager
 {
@@ -17,6 +18,7 @@ namespace DeviceManager
     {
         private ILog log = LogManager.GetLogger(nameof(DPS5005Device));
 
+        private StateMachine<States, Transition> stateMachine;
         private SerialPort commsPort;
         private IModbusSerialMaster? deviceMaster;
         private ushort[] latestState;
@@ -30,6 +32,61 @@ namespace DeviceManager
             commsPort.ReadTimeout = 2000;
             this.commsPort = commsPort;
             latestState = new ushort[(int)Device_State_Offset.Product_Firmware];
+
+            this.stateMachine = new StateMachine<States, Transition>(States.Startup);
+
+            this.stateMachine.Configure(States.Startup)
+                .Permit(Transition.Start, States.Idle);
+
+            this.stateMachine.Configure(States.Idle)
+                .Permit(Transition.Connected, States.Connected)
+                .OnEntry(async () =>
+                {
+                    log.InfoDetail("Starting DPS handling");
+                    while (!this.commsPort.IsOpen)
+                    {
+                        try
+                        {
+                            this.log.InfoDetail("Device about to open");
+                            this.commsPort.Open();
+                            this.log.InfoDetail("Device open");
+                            var factory = new ModbusFactory();
+                            var newMaster = factory.CreateRtuMaster(commsPort);
+                            this.deviceMaster = newMaster;
+                            this.log.InfoDetail("Master Established");
+                            this.stateMachine.Fire(Transition.Connected);
+                            break;
+                        }
+                        catch (Exception commsFault)
+                        {
+                            this.log.Error("Unable to open serial port", commsFault);
+                            await Task.Delay(TimeSpan.FromSeconds(10));
+                        }
+                    }
+                });
+
+            this.stateMachine.Configure(States.Connected)
+                .Permit(Transition.Disconnect, States.Idle)
+                .OnEntry(async () => {
+                    this.log.InfoDetail("DPS Connected");
+                    while (true)
+                    {
+                        try
+                        {
+                            this.UpdateDeviceState();
+
+                            await Task.Delay(TimeSpan.FromMilliseconds(100));
+                        }
+                        catch (Exception)
+                        {
+                            this.stateMachine.Fire(Transition.Disconnect);
+                            break;
+                        }
+                    }
+                });
+
+            this.stateMachine.Fire(Transition.Start);
+            log.InfoDetail("Device State machine fired");
         }
 
         public event Action? PropertiesUpdated;
@@ -55,28 +112,7 @@ namespace DeviceManager
             }
         }
 
-        public bool Open()
-        {
-            try
-            {
-                this.log.InfoDetail("Device about to open");
-                this.commsPort.Open();
-                this.log.InfoDetail("Device open");
-                var factory = new ModbusFactory();
-                var newMaster = factory.CreateRtuMaster(commsPort);
-                this.deviceMaster = newMaster;
-                this.log.InfoDetail("Master Established");
-
-                return true;
-            }
-            catch (Exception commsFault)
-            {
-                this.log.Error("Unable to open serial port", commsFault);
-                return false;
-            }
-        }
-
-        public void Close()
+        private void Close()
         {
             this.deviceMaster = null;
             this.log.InfoDetail("Device about to close");
@@ -154,15 +190,11 @@ namespace DeviceManager
 
             Idle,
 
-            Connecting,
-
             Connected,
         }
 
         private enum Transition
         {
-            Created,
-
             Start,
 
             Connected,

@@ -2,7 +2,7 @@
 @inject DPSService DpsDevice
 
 <DPSComponent />
-<FZ35Component />
+<FZComponent />
 
 @code{
 
@@ -15,20 +15,6 @@
     public void dpsChanged()
     {
         this.InvokeAsync(() => StateHasChanged());
-    }
-
-    public void EnableDevice()
-    {
-        Console.WriteLine("Enabling device");
-        this.DpsDevice.Start();
-        Console.WriteLine("Start requested");
-    }
-
-    public void DisableDevice()
-    {
-        Console.WriteLine("Disabling device");
-        this.DpsDevice.Stop();
-        Console.WriteLine("Stop requested");
     }
 
     public void Dispose()

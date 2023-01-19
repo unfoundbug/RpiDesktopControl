@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorDeviceControl", "Blaz
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceManager", "DeviceManager\DeviceManager.csproj", "{305A001F-9B5E-4BC8-B823-3D1C9FF1035C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceExtensions", "ServiceExtensions\ServiceExtensions.csproj", "{04DE2B77-84A2-4997-A2E9-C8F81FDCABAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceExtensions", "ServiceExtensions\ServiceExtensions.csproj", "{04DE2B77-84A2-4997-A2E9-C8F81FDCABAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -41,12 +41,9 @@ namespace BlazorDeviceControl.SystemServices
 
                 this.deviceTask = Task.Run(async () => {
                     var activeToken = this.cts.Token;
-                    log.InfoDetail("Device open");
-                    this.controlledDevice.Open();
                     log.InfoDetail("Device start polling");
                     while (!activeToken.IsCancellationRequested)
                     {
-                        this.controlledDevice.UpdateDeviceState();
                         await Task.Delay(TimeSpan.FromMilliseconds(100));
                     }
                     log.InfoDetail("Device done polling");
@@ -55,25 +52,6 @@ namespace BlazorDeviceControl.SystemServices
                 this.Running = true;
                 this.PropertiesUpdated?.Invoke();
             }
-        }
-
-        public void Stop()
-        {
-
-            log.InfoDetail("Device stop requested");
-            if (this.Running)
-            {
-                log.InfoDetail("Device stop starting");
-                cts?.Cancel();
-                this.cts = null;
-                this.deviceTask?.Wait();
-                this.controlledDevice?.Close();
-                this.controlledDevice.PropertiesUpdated -= this.ChildDevicePropertiesUpdated;
-                this.controlledDevice = null;
-                this.Running = false;
-                this.PropertiesUpdated?.Invoke();
-            }
-            log.InfoDetail("Device stop done");
         }
 
         private void ChildDevicePropertiesUpdated()
