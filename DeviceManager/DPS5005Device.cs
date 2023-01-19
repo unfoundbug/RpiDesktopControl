@@ -8,36 +8,82 @@ using NModbus;
 using NModbus.Serial;
 using NModbus.IO;
 using System.ComponentModel;
+using log4net;
+using ServiceExtensions;
 
 namespace DeviceManager
 {
-    public class DPS5005Device : INotifyPropertyChanged
+    public class DPS5005Device
     {
+        private ILog log = LogManager.GetLogger(nameof(DPS5005Device));
+
         private SerialPort commsPort;
-        private IModbusSerialMaster deviceMaster;
+        private IModbusSerialMaster? deviceMaster;
         private ushort[] latestState;
 
 
         public DPS5005Device(SerialPort commsPort)
         {
-            commsPort.BaudRate = 9600;
+            commsPort.BaudRate = 19200;
             commsPort.StopBits = StopBits.One;
             commsPort.Parity = Parity.None;
+            commsPort.ReadTimeout = 2000;
             this.commsPort = commsPort;
-            this.commsPort.Open();
             latestState = new ushort[(int)Device_State_Offset.Product_Firmware];
-            var factory = new ModbusFactory();
-            var newMaster = factory.CreateRtuMaster(commsPort);
-            this.deviceMaster = newMaster;
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? PropertiesUpdated;
 
         public void UpdateDeviceState()
         {
-            this.latestState = deviceMaster.ReadHoldingRegisters(0, 0, 0x0c);
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+            try
+            {
+                var newState = deviceMaster.ReadHoldingRegisters(1, 0, 0x0c);
+                if (newState != this.latestState)
+                {
+                    this.latestState = newState;
+                    this.PropertiesUpdated?.Invoke();
+                }
+            } 
+            catch(InvalidOperationException io)
+            {
+                log.Info("Port closed while read pending: " + io.Message);
+            }
+            catch(Exception ex)
+            {
+                this.log.ErrorDetail("Error handled reading DPS device: " + ex.Message, ex);
+            }
         }
+
+        public bool Open()
+        {
+            try
+            {
+                this.log.InfoDetail("Device about to open");
+                this.commsPort.Open();
+                this.log.InfoDetail("Device open");
+                var factory = new ModbusFactory();
+                var newMaster = factory.CreateRtuMaster(commsPort);
+                this.deviceMaster = newMaster;
+                this.log.InfoDetail("Master Established");
+
+                return true;
+            }
+            catch (Exception commsFault)
+            {
+                this.log.Error("Unable to open serial port", commsFault);
+                return false;
+            }
+        }
+
+        public void Close()
+        {
+            this.deviceMaster = null;
+            this.log.InfoDetail("Device about to close");
+            this.commsPort.Close();
+            this.log.InfoDetail("Device close");
+        }
+
 
         public float VoltageSetting { get; set; }
 
@@ -52,10 +98,15 @@ namespace DeviceManager
         public Protection_State Protection_Status => (Protection_State)this.latestState[(int)Device_State_Offset.Output_Voltage];
         public bool IsConstantCurrent => this.latestState[(int)Device_State_Offset.CVCC_State] == 0;
         public bool IsConstantVoltage => this.latestState[(int)Device_State_Offset.CVCC_State] == 1;
-        public bool Output_State { get; set; }
+
+        public bool Output_State => this.latestState[(int)Device_State_Offset.Output_State] == 1;
+        public bool Enable_Output { get; set; }
         public int Backlight_Brightness => this.latestState[(int)Device_State_Offset.CVCC_State];
         public int Product_Model => this.latestState[(int)Device_State_Offset.Product_Model];
         public int Product_Firmware => this.latestState[(int)Device_State_Offset.Product_Firmware];
+
+        public bool IsOpen => this.commsPort.IsOpen;
+
 
         public enum Protection_State
         {
@@ -97,5 +148,26 @@ namespace DeviceManager
             Product_Firmware = 12,
         }
 
+        private enum States
+        {
+            Startup,
+
+            Idle,
+
+            Connecting,
+
+            Connected,
+        }
+
+        private enum Transition
+        {
+            Created,
+
+            Start,
+
+            Connected,
+
+            Disconnect
+        }
     }
 }

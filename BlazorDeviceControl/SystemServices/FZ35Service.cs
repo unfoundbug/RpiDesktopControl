@@ -5,17 +5,17 @@ using log4net;
 using ServiceExtensions;
 namespace BlazorDeviceControl.SystemServices
 {
-    public class DPSService
+    public class FZ35Service
     {
         private static ILog log = LogManager.GetLogger(typeof(DPSService));
 
-        DPS5005Device? controlledDevice;
+        LoadDevice? controlledDevice;
         CancellationTokenSource? cts;
         Task? deviceTask;
 
         public event Action? PropertiesUpdated;
 
-        public DPSService()
+        public FZ35Service()
         {
 
         }
@@ -27,15 +27,15 @@ namespace BlazorDeviceControl.SystemServices
             log.InfoDetail("Device start requested");
 
             this.cts = new CancellationTokenSource();
-            string? targetDev = Environment.GetEnvironmentVariable("BLAZOR_SERIAL_DPS");
+            string? targetDev = Environment.GetEnvironmentVariable("BLAZOR_SERIAL_LOAD");
             if(string.IsNullOrEmpty(targetDev) ) {
-                log.ErrorDetail("BLAZOR_SERIAL_DPS not defined");
+                log.ErrorDetail("BLAZOR_SERIAL_LOAD not defined");
             }
             else
             {
                 log.InfoDetail("Device found: " + targetDev);
                 SerialPort loadedPort = new SerialPort(targetDev);
-                this.controlledDevice = new DPS5005Device(loadedPort);
+                this.controlledDevice = new LoadDevice(loadedPort);
                 this.controlledDevice.PropertiesUpdated += this.ChildDevicePropertiesUpdated;
                 log.InfoDetail("Device Intantiated");
 
@@ -67,7 +67,7 @@ namespace BlazorDeviceControl.SystemServices
                 cts?.Cancel();
                 this.cts = null;
                 this.deviceTask?.Wait();
-                this.controlledDevice.Close();
+                this.controlledDevice?.Close();
                 this.controlledDevice.PropertiesUpdated -= this.ChildDevicePropertiesUpdated;
                 this.controlledDevice = null;
                 this.Running = false;
@@ -81,7 +81,7 @@ namespace BlazorDeviceControl.SystemServices
             this.PropertiesUpdated?.Invoke();
         }
 
-        public DPS5005Device? Device
+        public LoadDevice? Device
         {
             get => this.controlledDevice;
             set

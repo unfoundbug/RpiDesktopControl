@@ -12,11 +12,14 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.15" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="6.1.0" />
     <PackageReference Include="System.IO.Ports" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DeviceManager\DeviceManager.csproj" />
+    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
 
 </Project>
