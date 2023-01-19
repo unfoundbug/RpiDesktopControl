@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NModbus" Version="3.0.72" />
+    <PackageReference Include="NModbus.Serial" Version="3.0.72" />
+    <PackageReference Include="System.IO.Ports" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>

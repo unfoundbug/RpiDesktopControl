@@ -1,0 +1,44 @@
+﻿@page "/"
+@inject DPSService DpsDevice
+
+<h1>Hello, world!</h1>
+
+@if (DpsDevice.Running)
+{
+    <h2>Device is currently running</h2>
+    <button onclick="@(()=>this.EnableDevice())" />
+}
+else
+{
+    <h2>Device is not currently running</h2>
+    <button onclick="@(()=>this.DisableDevice())" />
+}
+
+@code{
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.DpsDevice.PropertyChanged += this.dpsChanged;
+    }
+
+    public void dpsChanged(object? s, object e)
+    {
+        this.InvokeAsync(() => StateHasChanged());
+    }
+
+    public void EnableDevice()
+    {
+        this.DpsDevice.Start();
+    }
+
+    public void DisableDevice()
+    {
+        this.DpsDevice.Stop();
+    }
+
+    public void Dispose()
+    {
+        this.DpsDevice.PropertyChanged -= this.dpsChanged;
+    }
+}
