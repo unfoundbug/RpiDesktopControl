@@ -6,12 +6,12 @@
 @if (DpsDevice.Running)
 {
     <h2>Device is currently running</h2>
-    <button onclick="@(()=>this.EnableDevice())" />
+    <button onclick="@(()=>this.DisableDevice())" />
 }
 else
 {
     <h2>Device is not currently running</h2>
-    <button onclick="@(()=>this.DisableDevice())" />
+    <button onclick="@(()=>this.EnableDevice())" />
 }
 
 @code{
@@ -29,11 +29,13 @@ else
 
     public void EnableDevice()
     {
+        Console.WriteLine("Enabling device!");
         this.DpsDevice.Start();
     }
 
     public void DisableDevice()
     {
+        Console.WriteLine("Disabling device!");
         this.DpsDevice.Stop();
     }
 
