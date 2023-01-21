@@ -4,21 +4,21 @@
     <RadzenChart>
         <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title = "Target Voltage" ValueProperty="TargetVoltage">
             <RadzenMarkers MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible=false/>
+            <RadzenSeriesDataLabels Visible="false"/>
         </RadzenLineSeries>
         <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Target Current" ValueProperty="TargetCurrent">
             <RadzenMarkers MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible=false />
+            <RadzenSeriesDataLabels Visible="false"/>
         </RadzenLineSeries>
         <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Actual Voltage" ValueProperty="ActualVoltage">
             <RadzenMarkers MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible=false/>
+            <RadzenSeriesDataLabels Visible="false" />
         </RadzenLineSeries>
         <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Actual Current" ValueProperty="ActualCurrent">
             <RadzenMarkers MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible=false/>
+            <RadzenSeriesDataLabels Visible="false" />
         </RadzenLineSeries>
-        <RadzenCategoryAxis Padding="@MaxItemCount"/>
+        <RadzenCategoryAxis Max="@lastTick" Min="@(this.lastTick - MaxItemCount)"/>
         <RadzenValueAxis>
             <RadzenGridLines Visible="true" />
             <RadzenAxisTitle Text="Reading" />
@@ -27,8 +27,8 @@
 
 </div>
 @code {
-    private ulong lastTick = 0;
-    private const int MaxItemCount = 500;
+    private const int MaxItemCount = 50;
+    private ulong lastTick = MaxItemCount;
     public class DataItem
     {
         public ulong TickCount { get; set; }
@@ -44,6 +44,11 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        for(int i = 0; i < MaxItemCount; ++i)
+        {
+            this.actualList.Add(new DataItem() { TickCount = (ulong)i });
+        }
+
         this.DpsDevice.PropertiesUpdated += UpdateView;
     }
 
