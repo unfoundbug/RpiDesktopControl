@@ -1,0 +1,72 @@
+﻿@inject DPSService DpsDevice
+<div class="container">
+
+    <RadzenChart>
+        <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title = "Target Voltage" ValueProperty="TargetVoltage">
+            <RadzenMarkers MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible=false/>
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Target Current" ValueProperty="TargetCurrent">
+            <RadzenMarkers MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible=false />
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Actual Voltage" ValueProperty="ActualVoltage">
+            <RadzenMarkers MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible=false/>
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false" Data="@VisibleEntries" CategoryProperty="TickCount" Title="Actual Current" ValueProperty="ActualCurrent">
+            <RadzenMarkers MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible=false/>
+        </RadzenLineSeries>
+        <RadzenCategoryAxis Padding="@MaxItemCount"/>
+        <RadzenValueAxis>
+            <RadzenGridLines Visible="true" />
+            <RadzenAxisTitle Text="Reading" />
+        </RadzenValueAxis>
+    </RadzenChart>
+
+</div>
+@code {
+    private ulong lastTick = 0;
+    private const int MaxItemCount = 500;
+    public class DataItem
+    {
+        public ulong TickCount { get; set; }
+        public float TargetVoltage { get; set; }
+        public float TargetCurrent { get; set; }
+        public float ActualVoltage { get; set; }
+        public float ActualCurrent { get; set; }
+    }
+
+    private List<DataItem> actualList = new List<DataItem>();
+    public DataItem[] VisibleEntries => this.actualList.ToArray();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.DpsDevice.PropertiesUpdated += UpdateView;
+    }
+
+    public void OnDispose()
+    {
+        this.DpsDevice.PropertiesUpdated -= UpdateView;
+    }
+
+    private void UpdateView()
+    {
+        this.actualList.Add(new DataItem()
+            {
+                TickCount = lastTick++,
+                TargetVoltage = this.DpsDevice.Device?.VoltageSetting ?? 0.0f,
+                TargetCurrent = this.DpsDevice.Device?.CurrentSetting ?? 0.0f,
+                ActualVoltage = this.DpsDevice.Device?.Output_Voltage ?? 0.0f,
+                ActualCurrent = this.DpsDevice.Device?.Output_Current ?? 0.0f,
+            });
+        if(this.actualList.Count > MaxItemCount)
+        {
+            this.actualList.RemoveAt(0);
+        }
+        this.InvokeAsync(() => this.StateHasChanged());
+    }
+}
+

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ServiceExtensions;
 using Stateless;
+using System.Configuration;
 
 namespace DeviceManager
 {
@@ -68,36 +69,40 @@ namespace DeviceManager
 
             this.stateMachine.Configure(States.Connected)
                 .Permit(Transition.Disconnect, States.Idle)
-                .OnEntry(async () => {
+                .OnEntry(async () =>
+                {
                     // Read initial state
-                    log.InfoDetail("Try Stop");
-                    this.ActionStop();
-                    log.InfoDetail("Read Params");
-                    this.ActionRead();
                     log.InfoDetail("Disable Output drive");
                     this.ActionDisable();
+
+                    log.InfoDetail("Try Stop");
+                    this.ActionStop();
+
+                    log.InfoDetail("Read Params");
+                    this.ActionRead();
+
                     log.InfoDetail("Start Monitoring");
                     this.ActionStart();
-                    log.InfoDetail("Device running");
 
+                    log.InfoDetail("Device running");
                     while (true)
                     {
                         try
                         {
                             var dataLine = this.commsPort.ReadLine();
                             var vals = dataLine.Split(',');
-                            log.InfoDetail($"Line read, {vals.Length}: {dataLine}");
                             if (vals.Length == 4)
                             {
-                                this.loadVoltage = float.Parse(vals[0]);
-                                this.loadCurrent = float.Parse(vals[1]);
-                                this.capacityDrained = float.Parse(vals[2]);
+                                this.loadVoltage = float.Parse(vals[0].TrimEnd('V'));
+                                this.loadCurrent = float.Parse(vals[1].TrimEnd('A'));
+                                this.capacityDrained = float.Parse(vals[2].TrimEnd(new char[] { 'A', 'h' }));
                                 var tsComp = vals[3].Split(':');
                                 this.activeTimer = new TimeSpan(int.Parse(tsComp[0]), int.Parse(tsComp[1]), 0);
                                 this.PropertiesUpdated?.Invoke();
                             }
+                            await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
                         }
-                        catch(Exception)
+                        catch (Exception)
                         {
                             this.stateMachine.Fire(Transition.Disconnect);
                             break;
@@ -143,7 +148,7 @@ namespace DeviceManager
 
         public float LVP
         {
-            get => (float)this.LVP;
+            get => (float)this.lvp;
             set => this.SetLVP(value);
         }
 
@@ -215,11 +220,15 @@ namespace DeviceManager
         private void ActionEnable()
         {
             this.DoCmd("on");
+            this.outputEnabled = true;
+            this.PropertiesUpdated?.Invoke();
         }
 
         private void ActionDisable()
         {
             this.DoCmd("off");
+            this.outputEnabled = false;
+            this.PropertiesUpdated?.Invoke();
         }
 
         private void SetCurrent(float newValue)
@@ -299,20 +308,25 @@ namespace DeviceManager
         private void ActionStart()
         {
             this.DoCmd("start");
-            this.outputEnabled = true;
-            this.PropertiesUpdated?.Invoke();
         }
 
         private void ActionStop()
         {
             this.DoCmd("stop");
-            this.outputEnabled = false;
-            this.PropertiesUpdated?.Invoke();
         }
 
         private void DoCmd(string cmd)
         {
+            string response = string.Empty;
             this.commsPort.WriteLine(cmd);
+            try
+            {
+                response = this.commsPort.ReadLine();
+            }
+            catch { }
+
+            this.log.InfoDetail($"Sent: {cmd}");
+            this.log.InfoDetail($"Recv: {response}");
         }
 
         private bool Open()

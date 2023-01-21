@@ -1,22 +1,27 @@
 ﻿@inject FZ35Service FzDevice
 
-<h4>DPSDetails</h4>
+<h4>LoadDetails</h4>
 <table>
     <tr>
-        <td>Value</td>
-        <td>Latest state</td>
-    </tr>
-    <tr>
-        <td>Load Voltage</td>
-        <td>@(FzDevice.Device?.LoadVoltage)V</td>
-    </tr>
-    <tr>
-        <td>Load Current</td>
-        <td>@(FzDevice.Device?.LoadCurrent)A</td>
-    </tr>
-        <tr>
-        <td>Target Current</td>
-        <td>@(FzDevice.Device?.TargetCurrent)A</td>
+        <td>
+            Settings
+            <table>
+                <tr><td>OVP</td><td>@(FzDevice.Device?.OVP)V</td></tr>
+                <tr><td>OCP</td><td>@(FzDevice.Device?.OCP)A</td></tr>
+                <tr><td>OPP</td><td>@(FzDevice.Device?.OPP)W</td></tr>
+                <tr><td>LVP</td><td>@(FzDevice.Device?.LVP)V</td></tr>
+                <tr><td>OAH</td><td>@(FzDevice.Device?.OAH)Wh</td></tr>
+            </table>
+        </td>
+        <td>
+            Read
+            <table>
+                <tr><td>Load Voltage</td><td>@(FzDevice.Device?.LoadVoltage)V</td></tr>
+                <tr><td>Load Current</td><td>@(FzDevice.Device?.LoadCurrent)A</td></tr>
+                <tr><td>Cap drained</td><td>@(FzDevice.Device?.CapacityDrained)Wh</td></tr>
+
+            </table>
+        </td>
     </tr>
 </table>
 @code {

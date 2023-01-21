@@ -1,28 +1,24 @@
 {
-  "iisSettings": {
-    "iisExpress": {
-      "applicationUrl": "http://+:60456",
-      "sslPort": 44366
-    }
-  },
   "profiles": {
     "http": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "http://+:5229",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://+:5229",
+      "hotReloadEnabled": false,
+      "nativeDebugging": true
     },
     "https": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "https://+:7207;http://+:5229",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://+:7207;http://+:5229"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -30,6 +26,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    }
+  },
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://+:60456",
+      "sslPort": 44366
     }
   }
 }

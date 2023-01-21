@@ -1,14 +1,16 @@
 ﻿@inject DPSService DpsDevice
 
-<h4>DPSDetails</h4>
+<h4>SupplyDetails</h4>
 <table>
     <tr>
         <td>Value</td>
         <td>Latest state</td>
+        <td>History</td>
     </tr>
     <tr>
         <td>Voltage Input</td>
         <td>@(DpsDevice.Device?.Input_Voltage)V</td>
+        <td rowspan="6"> <DPSVolCurGraph/> </td>
     </tr>
     <tr>
         <td>Target Voltage Output</td>

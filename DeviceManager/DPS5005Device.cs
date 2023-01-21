@@ -60,7 +60,7 @@ namespace DeviceManager
                         catch (Exception commsFault)
                         {
                             this.log.Error("Unable to open serial port", commsFault);
-                            await Task.Delay(TimeSpan.FromSeconds(10));
+                            await Task.Delay(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
                         }
                     }
                 });
@@ -75,7 +75,7 @@ namespace DeviceManager
                         {
                             this.UpdateDeviceState();
 
-                            await Task.Delay(TimeSpan.FromMilliseconds(100));
+                            await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
                         }
                         catch (Exception)
                         {

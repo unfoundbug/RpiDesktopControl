@@ -3,6 +3,7 @@ using log4net;
 using ServiceExtensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ var log = LogManager.GetLogger("Startup");
 
 builder.Services.AddSingleton<DPSService, DPSService>();
 builder.Services.AddSingleton<FZ35Service, FZ35Service>();
+builder.WebHost.UseWebRoot("wwwroot");
+builder.WebHost.UseStaticWebAssets();
 
 log.InfoDetail("DPS Service constructed");
 

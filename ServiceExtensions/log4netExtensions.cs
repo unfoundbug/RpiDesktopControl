@@ -1,4 +1,5 @@
 ﻿using log4net;
+using System.Configuration;
 using System.Runtime.CompilerServices;
 
 namespace ServiceExtensions
@@ -11,7 +12,7 @@ namespace ServiceExtensions
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
         {
-            var callerTypeName = Path.GetFileNameWithoutExtension(Path.GetFileName(callerFilePath));
+            var callerTypeName = TrimFileName(callerFilePath);
             log.Info($"{callerTypeName}::{memberName}^{sourceLineNumber}^{toLog}");
         }
 
@@ -20,7 +21,7 @@ namespace ServiceExtensions
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
         {
-            var callerTypeName = Path.GetFileNameWithoutExtension(Path.GetFileName(callerFilePath));
+            var callerTypeName = TrimFileName(callerFilePath);
             log.Debug($"{callerTypeName}::{memberName}^{sourceLineNumber}^{toLog}");
         }
 
@@ -29,7 +30,7 @@ namespace ServiceExtensions
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
         {
-            var callerTypeName = Path.GetFileNameWithoutExtension(Path.GetFileName(callerFilePath));
+            var callerTypeName = TrimFileName(callerFilePath);
             log.Warn($"{callerTypeName}::{memberName}^{sourceLineNumber}^{toLog}");
         }
 
@@ -39,8 +40,14 @@ namespace ServiceExtensions
         [System.Runtime.CompilerServices.CallerMemberName] string memberName = "",
         [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
         {
-            var callerTypeName = Path.GetFileNameWithoutExtension(Path.GetFileName(callerFilePath));
+            var callerTypeName = TrimFileName(callerFilePath);
             log.Error($"{callerTypeName}::{memberName}^{sourceLineNumber}^{toLog}");
+        }
+
+        private static string TrimFileName(string fileName)
+        {
+            var comp = fileName.Split('\\');
+            return Path.GetFileNameWithoutExtension(comp.Last());
         }
     }
 }
